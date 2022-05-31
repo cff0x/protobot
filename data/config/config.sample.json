@@ -1,0 +1,16 @@
+{
+  "discord": {
+    "token": "BOT TOKEN",
+    "appId": 945912800344154134,
+    "guildId": 977241150614274118
+  },
+  "database": {
+    "host": "192.168.0.200",
+    "username": "protobot",
+    "password": "protobot",
+    "dbname": "protobot"
+  },
+  "modules": [
+    "test_module"
+  ]
+}

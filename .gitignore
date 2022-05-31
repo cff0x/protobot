@@ -1,0 +1,10 @@
+.vs
+.vscode
+.idea
+cmake-build-debug
+build
+bin
+*.log
+config.json
+config.dev.json
+.DS_Store
