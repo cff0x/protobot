@@ -5,10 +5,11 @@
 #include <protobot/client.h>
 #include <protobot/events.h>
 
+namespace protobot {
+using namespace protobot;
+
 class bot_module;
 class bot_module_manager;
-
-
 
 /**
  * This #define allows us to call a method in all loaded modules in a readable simple way, e.g.:
@@ -94,10 +95,10 @@ public:
     const std::vector<bot_module*>* get_event_handlers();
 
     // retrieves a list of all loaded modules
-    const module_map& get_module_list() const;
+    const module_map* get_module_list();
 
-    const std::map<std::string, std::vector<module_command>>& get_module_commands() const;
-    bot_module* get_command_module(std::string name);
+    const std::map<std::string, std::vector<module_command>>* get_module_commands();
+    bot_module* get_command_module(std::string command_name);
 
     // retrieves the last error message
     const std::string& get_last_error();
@@ -105,10 +106,6 @@ public:
 private:
     // points to the bot instance which this module manager belongs to
     client* m_bot;
-
-#ifdef PROTOBOT_COMMAND_SUPPORT
-    ModuleCommandManager* m_commandManager;
-#endif
 
     // maps module names to their respective native info
     std::map<std::string, module_native> m_native_modules;
@@ -119,10 +116,13 @@ private:
     // list containing all loaded modules
     module_map m_module_list;
 
+    // maps a module object to a module name
     std::map<bot_module*, std::string> m_module_names;
 
-
+    // maps a module name to a list of module commands
     std::map<std::string, std::vector<module_command>> m_module_commands;
+
+    // maps a command name to a module object
     std::map<std::string, bot_module*> m_command_name_to_module;
 
     // last error message
@@ -142,6 +142,7 @@ protected:
     // points to the bot instance which this module belongs to
     client* m_bot;
 
+    // manager for this module
     bot_module_manager* m_module_manager;
 public:
     // used to create a new module instance
@@ -153,20 +154,15 @@ public:
     virtual std::string get_version();
     virtual std::string get_description();
 
+    // returns a list of commands belonging to the module
     virtual std::vector<module_command> get_commands();
-
-#ifdef PROTOBOT_COMMAND_SUPPORT
-    // called when a module command has been registered
-    virtual void onCommandCreated(const std::string& name, const ModuleCommand& command);
-    virtual void onBulkCommandCreated(const std::map<std::string, ModuleCommand>& commands);
-#endif
 
     // the following code between the two BOT_MODULE_EVENT_DEF tags is automatically generated
     // ! PLEASE DO NOT EDIT !
     //
     // <BOT_MODULE_EVENT_DEF>
     //
-    // GENERATED AT: 05/31/2022 21:51:59
+    // GENERATED AT: 06/01/2022 01:14:31
     //
     virtual bool on_voice_state_update(const dpp::voice_state_update_t &event);
     virtual bool on_voice_client_disconnect(const dpp::voice_client_disconnect_t &event);
@@ -240,47 +236,12 @@ public:
     virtual bool on_stage_instance_update(const dpp::stage_instance_update_t &event);
     virtual bool on_stage_instance_delete(const dpp::stage_instance_delete_t &event);
     // </BOT_MODULE_EVENT_DEF>
-
-    // output a simple embed message (useful for error reporting)
-    void embedSimple(const std::string &message, int64_t channelId);
 };
 
-#ifdef PROTOBOT_COMMAND_SUPPORT
-
-class ModuleCommandManager {
-public:
-    ModuleCommandManager(Bot* bot);
-    ~ModuleCommandManager();
-
-    void createCommand(const ModuleCommand& command);
-    void bulkCreateCommand(const std::vector<ModuleCommand*>& commands);
-
-    void onCreateCommand(const dpp::confirmation_callback_t &event,
-                         const std::string& name, std::function<void (const dpp::slashcommand_t&)> callback, Module* parent);
-    void onBulkCreateCommand(const dpp::confirmation_callback_t &event,
-                             const std::map<std::string, ModuleCommand>& commands);
-
-
-private:
-    // bot client
-    Bot* m_bot;
-
-    std::mutex m_mutex;
-
-    // maps command ids to ModuleCommandInfo
-    std::map<dpp::snowflake, ModuleCommand> m_commandInfo;
-
-    // contains a list of command ids for each module
-    std::map<Module*, std::vector<dpp::snowflake>> m_moduleCommands;
-
-    // maps command names to their respective command id
-    std::map<std::string, dpp::snowflake> m_commandNames;
-};
-
-#endif
+}
 
 // used to define a module's entry point
-#define MODULE_ENTRY(module_class_name) extern "C" bot_module* init_module(client* bot, bot_module_manager* manager) {          \
+#define MODULE_ENTRY(module_class_name) extern "C" protobot::bot_module* init_module(protobot::client* bot, protobot::bot_module_manager* manager) {          \
     return new module_class_name(bot, manager);                                                                    \
 }
 

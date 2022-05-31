@@ -8,10 +8,10 @@
 #include <utility>
 #include <vector>
 
+namespace protobot {
 
-
-bot_module_manager::bot_module_manager(client* bot) :
-        m_bot(bot) {
+bot_module_manager::bot_module_manager(client *bot) :
+    m_bot(bot) {
     m_bot->get_core()->log(dpp::ll_info, "Initializing module loader...");
 }
 
@@ -19,24 +19,28 @@ bot_module_manager::~bot_module_manager() {
 
 }
 
-void bot_module_manager::attach(const std::vector<bot_module_event> &events, bot_module* module) {
-    for (auto n = events.begin(); n != events.end(); ++n) {
-        if (std::find(m_event_handlers[*n].begin(), m_event_handlers[*n].end(), module) == m_event_handlers[*n].end()) {
-            m_event_handlers[*n].push_back(module);
-            m_bot->log(dpp::ll_debug, fmt::format("Module \"{}\" attached event \"{}\"", module->get_description(), BOT_MODULE_EVENT_NAMES[*n]));
+void bot_module_manager::attach(const std::vector<bot_module_event> &events, bot_module *module) {
+    for(auto event: events) {
+        if (std::find(
+            m_event_handlers[event].begin(), m_event_handlers[event].end(), module) ==
+            m_event_handlers[event].end()) {
+            m_event_handlers[event].push_back(module);
+            m_bot->log(dpp::ll_debug, fmt::format("Module \"{}\" attached event \"{}\"", module->get_description(),
+                                                  BOT_MODULE_EVENT_NAMES[event]));
         } else {
             m_bot->log(dpp::ll_warning, fmt::format("Module \"{}\" is already attached to event \"{}\"",
-                                                    module->get_description(), BOT_MODULE_EVENT_NAMES[*n]));
+                                                    module->get_description(), BOT_MODULE_EVENT_NAMES[event]));
         }
     }
 }
 
-void bot_module_manager::detach(const std::vector<bot_module_event> &events, bot_module* module) {
-    for (auto n = events.begin(); n != events.end(); ++n) {
-        auto it = std::find(m_event_handlers[*n].begin(), m_event_handlers[*n].end(), module);
-        if (it != m_event_handlers[*n].end()) {
-            m_event_handlers[*n].erase(it);
-            m_bot->log(dpp::ll_debug, fmt::format("Module \"{}\" detached event \"{}\"", module->get_description(), BOT_MODULE_EVENT_NAMES[*n]));
+void bot_module_manager::detach(const std::vector<bot_module_event> &events, bot_module *module) {
+    for(auto event: events) {
+        auto it = std::find(m_event_handlers[event].begin(), m_event_handlers[event].end(), module);
+        if (it != m_event_handlers[event].end()) {
+            m_event_handlers[event].erase(it);
+            m_bot->log(dpp::ll_debug, fmt::format("Module \"{}\" detached event \"{}\"", module->get_description(),
+                                                  BOT_MODULE_EVENT_NAMES[event]));
         }
     }
 }
@@ -58,17 +62,17 @@ bool bot_module_manager::load(const std::string &file_name) {
 
         char buffer[PATH_MAX + 1];
         getcwd(buffer, PATH_MAX);
-        std::filesystem::path currentDir{std::string(buffer)};
-        std::filesystem::path moduleFile{fmt::format("{}.protomod", file_name)};
-        std::filesystem::path fullModulePath =
-                currentDir / m_bot->get_config()->get_modules_path() / moduleFile;
+        std::filesystem::path current_dir{std::string(buffer)};
+        std::filesystem::path module_file{fmt::format("{}.protomod", file_name)};
+        std::filesystem::path full_module_path =
+            current_dir / m_bot->get_config()->get_modules_path() / module_file;
 
-        m_bot->log(dpp::ll_debug, fmt::format("Bot module file path: {}", fullModulePath.string()));
+        m_bot->log(dpp::ll_debug, fmt::format("Bot module file path: {}", full_module_path.string()));
 
 #ifdef _WIN32
         m.dlopenHandle = LoadLibraryW(fullModulePath.c_str());
 #else
-        m.library_handle = dlopen(fullModulePath.c_str(), RTLD_NOW | RTLD_LOCAL);
+        m.library_handle = dlopen(full_module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
 #endif
         if (!m.library_handle) {
 #ifdef _WIN32
@@ -92,7 +96,7 @@ bool bot_module_manager::load(const std::string &file_name) {
                 m_bot->log(dpp::ll_debug, fmt::format("Module shared object {} loaded, symbol found", file_name));
                 m.module_object = m.entry_point(m_bot, this);
 
-                if (!m.module_object || (uint64_t)m.module_object == 0xffffffffffffffff) {
+                if (!m.module_object || (uint64_t) m.module_object == 0xffffffffffffffff) {
                     m_bot->log(dpp::ll_error, fmt::format("Invalid module pointer returned"));
                     m.error = "Not a module (symbol init_module not found)";
                     m_last_error = m.error;
@@ -104,17 +108,18 @@ bool bot_module_manager::load(const std::string &file_name) {
                     return false;
                 } else {
 
-                    const std::vector<module_command>& moduleCommands = m.module_object->get_commands();
-                    m_bot->log(dpp::ll_debug, fmt::format("Loading {} commands from module {}...", moduleCommands.size(), file_name));
-                    for(const auto& entry: moduleCommands) {
-                        if(m_command_name_to_module.contains(entry.name)) {
+                    const std::vector<module_command> &module_commands = m.module_object->get_commands();
+                    m_bot->log(dpp::ll_debug,
+                               fmt::format("Loading {} commands from module {}...", module_commands.size(), file_name));
+                    for (const auto &entry: module_commands) {
+                        if (m_command_name_to_module.contains(entry.name)) {
                             m_bot->log(
-                                    dpp::ll_critical,
-                                    fmt::format("Command {} has already been added by module {}! Failed to load.",
-                                                entry.name, m_module_names[m_command_name_to_module[entry.name]]));
+                                dpp::ll_critical,
+                                fmt::format("Command {} has already been added by module {}! Failed to load.",
+                                            entry.name, m_module_names[m_command_name_to_module[entry.name]]));
 
                             // delete all commands belonging to this module
-                            for(auto it = m_command_name_to_module.begin(); it != m_command_name_to_module.end(); ) {
+                            for (auto it = m_command_name_to_module.begin(); it != m_command_name_to_module.end();) {
                                 if (it->second == m.module_object) {
                                     it = m_command_name_to_module.erase(it);
                                 } else {
@@ -129,10 +134,11 @@ bool bot_module_manager::load(const std::string &file_name) {
                         }
 
                         m_command_name_to_module[entry.name] = m.module_object;
-                        m_bot->log(dpp::ll_debug, fmt::format("Added module command \"{}\" ({})", entry.name, entry.description));
+                        m_bot->log(dpp::ll_debug,
+                                   fmt::format("Added module command \"{}\" ({})", entry.name, entry.description));
                     }
 
-                    m_module_commands[file_name] = moduleCommands;
+                    m_module_commands[file_name] = module_commands;
                     m_bot->log(dpp::ll_debug, fmt::format("Module {} initialized", file_name));
                     m_native_modules[file_name] = m;
                     m_module_list[file_name] = m.module_object;
@@ -151,7 +157,7 @@ bool bot_module_manager::load(const std::string &file_name) {
 }
 
 bool bot_module_manager::unload(const std::string &file_name) {
-    std::lock_guard lockGuard(m_mutex);
+    std::lock_guard lock_guard(m_mutex);
 
     m_bot->log(dpp::ll_info, fmt::format("Unloading module {}", file_name));
 
@@ -161,7 +167,7 @@ bool bot_module_manager::unload(const std::string &file_name) {
         return false;
     }
 
-    module_native& mod = m->second;
+    module_native &mod = m->second;
 
     // remove attached events
     for (int j = M_BEGIN; j != M_END; ++j) {
@@ -206,21 +212,21 @@ bool bot_module_manager::reload(const std::string &file_name) {
 }
 
 void bot_module_manager::load_all() {
-    json moduleConfig = m_bot->get_config()->data()["modules"];
-    for(const auto& entry: moduleConfig) {
+    json module_config = m_bot->get_config()->data()["modules"];
+    for (const auto &entry: module_config) {
         std::string moduleName = entry.get<std::string>();
         load(moduleName);
     }
 }
 
-bool bot_module_manager::get_symbol(module_native &native, const char* symbol_name) {
+bool bot_module_manager::get_symbol(module_native &native, const char *symbol_name) {
     // Find exported symbol in shared object
     if (native.library_handle) {
 #ifdef _WIN32
         native.entryPoint = (ModuleEntryPoint*)GetProcAddress((HMODULE)native.dlopenHandle, symbolName);
 #else
         dlerror(); // clear value
-        native.entry_point = (module_entry_point*)dlsym(native.library_handle, symbol_name);
+        native.entry_point = (module_entry_point *) dlsym(native.library_handle, symbol_name);
         native.error = dlerror();
 #endif
         if (!native.entry_point || native.error) {
@@ -233,11 +239,11 @@ bool bot_module_manager::get_symbol(module_native &native, const char* symbol_na
     return true;
 }
 
-const module_map &bot_module_manager::get_module_list() const {
-    return m_module_list;
+const module_map* bot_module_manager::get_module_list() {
+    return &m_module_list;
 }
 
-const std::string& bot_module_manager::get_last_error() {
+const std::string &bot_module_manager::get_last_error() {
     return m_last_error;
 }
 
@@ -249,85 +255,69 @@ const std::vector<bot_module *> *bot_module_manager::get_event_handlers() {
     return m_event_handlers;
 }
 
-const std::map<std::string, std::vector<module_command>> &bot_module_manager::get_module_commands() const {
-    return m_module_commands;
+const std::map<std::string, std::vector<module_command>>* bot_module_manager::get_module_commands() {
+    return &m_module_commands;
 }
 
-bot_module *bot_module_manager::get_command_module(std::string name) {
-    if(m_command_name_to_module.contains(name)) {
-        return m_command_name_to_module[name];
+bot_module *bot_module_manager::get_command_module(std::string command_name) {
+    if (m_command_name_to_module.contains(command_name)) {
+        return m_command_name_to_module[command_name];
     }
 
     return nullptr;
 }
 
 void bot_module_manager::register_module_commands() {
-    std::vector<dpp::slashcommand> commandsToCreate;
-    for(const auto& module: m_module_commands) {
-        for(const auto& cmd: module.second) {
+    std::vector<dpp::slashcommand> commands_to_create;
+    for (const auto &module: m_module_commands) {
+        for (const auto &cmd: module.second) {
             m_bot->log(dpp::ll_debug, fmt::format("cmd name: {}", cmd.name));
-            dpp::slashcommand newCmd(cmd.name, cmd.description, m_bot->get_id());
-            newCmd.set_default_permissions(cmd.permissions);
-            for(const auto& option: cmd.options) {
-                newCmd.add_option(option);
+            dpp::slashcommand new_cmd(cmd.name, cmd.description, m_bot->get_bot_user_id());
+            new_cmd.set_default_permissions(cmd.permissions);
+            for (const auto &option: cmd.options) {
+                new_cmd.add_option(option);
             }
-            commandsToCreate.push_back(newCmd);
+            commands_to_create.push_back(new_cmd);
         }
     }
 
     // create commands for guild if running in dev mode
-    if(m_bot->is_dev_mode()) {
-        m_bot->get_core()->guild_bulk_command_create(commandsToCreate, m_bot->get_config()->guild_id());
+    if (m_bot->is_dev_mode()) {
+        m_bot->get_core()->guild_bulk_command_create(commands_to_create, m_bot->get_config()->dev_guild_id());
     } else {
-        //m_client->getCore()->global_bulk_command_create(commandsToCreate);
+        m_bot->get_core()->global_bulk_command_create(commands_to_create);
     }
 
 }
 
-bot_module::bot_module(client* bot, bot_module_manager* manager) :
-        m_bot(bot),
-        m_module_manager(manager) {
+bot_module::bot_module(client *bot, bot_module_manager *manager) :
+    m_bot(bot),
+    m_module_manager(manager) {
 
 }
 
-bot_module::~bot_module()
-{
+bot_module::~bot_module() {
 
 }
 
-std::string bot_module::get_version()
-{
+std::string bot_module::get_version() {
     return "<not implemented>";
 }
 
-std::string bot_module::get_description()
-{
+std::string bot_module::get_description() {
     return "<not implemented>";
 }
 
-std::vector<module_command> bot_module::get_commands()
-{
+std::vector<module_command> bot_module::get_commands() {
     return {};
 }
-
-#ifdef PROTOBOT_COMMAND_SUPPORT
-
-void Module::onCommandCreated(const std::string& name, const ModuleCommand& command) {
-
-}
-
-void Module::onBulkCommandCreated(const std::map<std::string, ModuleCommand>& commands) {
-
-}
-
-#endif
 
 // the following code between the two BOT_MODULE_EVENT_IMPL tags is automatically generated
 // ! PLEASE DO NOT EDIT !
 //
 // <BOT_MODULE_EVENT_IMPL>
 //
-// GENERATED AT: 05/31/2022 21:51:59
+// GENERATED AT: 06/01/2022 01:14:31
 //
 bool bot_module::on_voice_state_update(const dpp::voice_state_update_t &event) {
     return true;
@@ -613,3 +603,5 @@ bool bot_module::on_stage_instance_delete(const dpp::stage_instance_delete_t &ev
     return true;
 }
 // </BOT_MODULE_EVENT_IMPL>
+
+}

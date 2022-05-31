@@ -2,25 +2,51 @@
 #include <protobot/module.h>
 #include <protobot/string_utils.h>
 
+namespace protobot {
 
-
-client::client(dpp::cluster* core, config* cfg, database* db, bool dev_mode) :
-        m_core(core),
-        m_cfg(cfg),
-        m_database(db),
-        m_module_manager(new bot_module_manager(this)),
-#ifdef PROTOBOT_COMMAND_SUPPORT
-        m_moduleCommandManager(new ModuleCommandManager(this)),
-#endif
-        m_dev_mode(dev_mode) {
+client::client(dpp::cluster *core, config *cfg, database *db, bool dev_mode) :
+    m_core(core),
+    m_cfg(cfg),
+    m_database(db),
+    m_module_manager(new bot_module_manager(this)),
+    m_dev_mode(dev_mode) {
 
 
 }
 
 client::~client() = default;
 
+
 bool client::is_dev_mode() {
     return m_dev_mode;
+}
+
+uint64_t client::get_bot_user_id() {
+    return m_core->me.id;
+}
+
+database *client::get_db() {
+    return m_database;
+}
+
+config *client::get_config() {
+    return m_cfg;
+}
+
+dpp::cluster *client::get_core() {
+    return m_core;
+}
+
+std::mutex &client::get_mutex() {
+    return m_mutex;
+}
+
+bot_module_manager *client::get_module_manager() {
+    return m_module_manager;
+}
+
+void client::log(dpp::loglevel severity, const std::string &msg) const {
+    m_core->log(severity, msg);
 }
 
 void client::load_modules() {
@@ -29,36 +55,142 @@ void client::load_modules() {
     m_module_manager->load_all();
 }
 
+dpp::emoji* client::find_emoji_by_name(const std::string& name, dpp::snowflake guild_id) {
+    if(guild_id != 0) {
+        auto guild = dpp::find_guild(guild_id);
+        auto it = std::find_if(guild->emojis.begin(), guild->emojis.end(),
+                               [name](auto emoji_id) { return dpp::find_emoji(emoji_id)->name == name; });
+
+        return dpp::find_emoji(*it);
+    } else {
+        auto emoji_map = dpp::get_emoji_cache()->get_container();
+        auto it = std::find_if(emoji_map.begin(), emoji_map.end(),
+                               [name](auto entry) { return entry.second->name == name; });
+
+        return it->second;
+    }
+}
+
+dpp::role* client::find_role_by_name(const std::string &name, dpp::snowflake guild_id) {
+    auto role_map = dpp::get_role_cache()->get_container();
+    auto it = std::find_if(role_map.begin(), role_map.end(),
+                           [name, guild_id](auto entry)
+                           {
+                                return entry.second->guild_id == guild_id && entry.second->name == name;
+                           });
+    return it->second;
+}
+
+dpp::channel* client::find_channel_by_name(const std::string &name, dpp::snowflake guild_id) {
+    auto channel_map = dpp::get_channel_cache()->get_container();
+    auto it = std::find_if(channel_map.begin(), channel_map.end(),
+                           [name, guild_id](auto entry)
+                           {
+                               return entry.second->guild_id == guild_id && entry.second->name == name;
+                           });
+    return it->second;
+}
+
 dpp::activity_type client::string_to_activity_type(std::string activityType) {
     std::transform(activityType.begin(), activityType.end(), activityType.begin(),
-                   [](unsigned char c){ return std::tolower(c); });
-    if(activityType == "playing" || activityType == "0") {
+                   [](unsigned char c) { return std::tolower(c); });
+    if (activityType == "playing" || activityType == "0") {
         return dpp::activity_type::at_game;
-    } else if(activityType == "streaming" || activityType == "1") {
+    } else if (activityType == "streaming" || activityType == "1") {
         return dpp::activity_type::at_streaming;
-    } else if(activityType == "listening" || activityType == "2") {
+    } else if (activityType == "listening" || activityType == "2") {
         return dpp::activity_type::at_listening;
-    } else if(activityType == "watching" || activityType == "3") {
+    } else if (activityType == "watching" || activityType == "3") {
         return dpp::activity_type::at_watching;
-    } else if(activityType == "custom" || activityType == "4") {
+    } else if (activityType == "custom" || activityType == "4") {
         return dpp::activity_type::at_custom;
-    } else if(activityType == "competing" || activityType == "5") {
+    } else if (activityType == "competing" || activityType == "5") {
         return dpp::activity_type::at_competing;
     }
 
     throw std::runtime_error("string_to_activity_type: Invalid activity type");
 }
 
-uint64_t client::get_id() {
-    return m_core->me.id;
-}
-
-dpp::cluster* client::get_core() {
-    return m_core;
-}
-
-config* client::get_config() {
-    return m_cfg;
+void client::bind_events() {
+    // the following code between the two CLIENT_EVENT_BINDS tags is automatically generated
+    // ! PLEASE DO NOT EDIT !
+    //
+    // <CLIENT_EVENT_BINDS>
+    //
+    // GENERATED AT: 06/01/2022 01:14:31
+    //
+    m_core->on_voice_state_update([this](auto && PH1) { on_voice_state_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_client_disconnect([this](auto && PH1) { on_voice_client_disconnect(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_client_speaking([this](auto && PH1) { on_voice_client_speaking(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_join_request_delete([this](auto && PH1) { on_guild_join_request_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_interaction_create([this](auto && PH1) { on_interaction_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_slashcommand([this](auto && PH1) { on_slashcommand(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_button_click([this](auto && PH1) { on_button_click(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_autocomplete([this](auto && PH1) { on_autocomplete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_select_click([this](auto && PH1) { on_select_click(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_context_menu([this](auto && PH1) { on_message_context_menu(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_user_context_menu([this](auto && PH1) { on_user_context_menu(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_form_submit([this](auto && PH1) { on_form_submit(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_delete([this](auto && PH1) { on_guild_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_channel_delete([this](auto && PH1) { on_channel_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_channel_update([this](auto && PH1) { on_channel_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_ready([this](auto && PH1) { on_ready(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_delete([this](auto && PH1) { on_message_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_member_remove([this](auto && PH1) { on_guild_member_remove(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_resumed([this](auto && PH1) { on_resumed(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_role_create([this](auto && PH1) { on_guild_role_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_typing_start([this](auto && PH1) { on_typing_start(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_reaction_add([this](auto && PH1) { on_message_reaction_add(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_members_chunk([this](auto && PH1) { on_guild_members_chunk(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_reaction_remove([this](auto && PH1) { on_message_reaction_remove(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_create([this](auto && PH1) { on_guild_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_channel_create([this](auto && PH1) { on_channel_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_reaction_remove_emoji([this](auto && PH1) { on_message_reaction_remove_emoji(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_delete_bulk([this](auto && PH1) { on_message_delete_bulk(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_role_update([this](auto && PH1) { on_guild_role_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_role_delete([this](auto && PH1) { on_guild_role_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_channel_pins_update([this](auto && PH1) { on_channel_pins_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_reaction_remove_all([this](auto && PH1) { on_message_reaction_remove_all(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_server_update([this](auto && PH1) { on_voice_server_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_emojis_update([this](auto && PH1) { on_guild_emojis_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_stickers_update([this](auto && PH1) { on_guild_stickers_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_presence_update([this](auto && PH1) { on_presence_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_webhooks_update([this](auto && PH1) { on_webhooks_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_member_add([this](auto && PH1) { on_guild_member_add(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_invite_delete([this](auto && PH1) { on_invite_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_update([this](auto && PH1) { on_guild_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_integrations_update([this](auto && PH1) { on_guild_integrations_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_member_update([this](auto && PH1) { on_guild_member_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_invite_create([this](auto && PH1) { on_invite_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_update([this](auto && PH1) { on_message_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_user_update([this](auto && PH1) { on_user_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_message_create([this](auto && PH1) { on_message_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_ban_add([this](auto && PH1) { on_guild_ban_add(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_ban_remove([this](auto && PH1) { on_guild_ban_remove(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_integration_create([this](auto && PH1) { on_integration_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_integration_update([this](auto && PH1) { on_integration_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_integration_delete([this](auto && PH1) { on_integration_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_create([this](auto && PH1) { on_thread_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_update([this](auto && PH1) { on_thread_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_delete([this](auto && PH1) { on_thread_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_list_sync([this](auto && PH1) { on_thread_list_sync(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_member_update([this](auto && PH1) { on_thread_member_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_thread_members_update([this](auto && PH1) { on_thread_members_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_scheduled_event_create([this](auto && PH1) { on_guild_scheduled_event_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_scheduled_event_update([this](auto && PH1) { on_guild_scheduled_event_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_scheduled_event_delete([this](auto && PH1) { on_guild_scheduled_event_delete(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_scheduled_event_user_add([this](auto && PH1) { on_guild_scheduled_event_user_add(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_guild_scheduled_event_user_remove([this](auto && PH1) { on_guild_scheduled_event_user_remove(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_buffer_send([this](auto && PH1) { on_voice_buffer_send(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_user_talking([this](auto && PH1) { on_voice_user_talking(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_ready([this](auto && PH1) { on_voice_ready(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_receive([this](auto && PH1) { on_voice_receive(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_receive_combined([this](auto && PH1) { on_voice_receive_combined(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_voice_track_marker([this](auto && PH1) { on_voice_track_marker(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_stage_instance_create([this](auto && PH1) { on_stage_instance_create(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_stage_instance_update([this](auto && PH1) { on_stage_instance_update(std::forward<decltype(PH1)>(PH1)); });
+    m_core->on_stage_instance_delete([this](auto && PH1) { on_stage_instance_delete(std::forward<decltype(PH1)>(PH1)); });
+    // </CLIENT_EVENT_BINDS>
 }
 
 // the following code between the two CLIENT_EVENT_BIND_IMPL tags is automatically generated
@@ -66,7 +198,7 @@ config* client::get_config() {
 //
 // <CLIENT_EVENT_BIND_IMPL>
 //
-// GENERATED AT: 05/31/2022 21:51:59
+// GENERATED AT: 06/01/2022 01:14:31
 //
 void client::on_voice_state_update(const dpp::voice_state_update_t &event) {
     FOREACH_MODULE(M_on_voice_state_update, on_voice_state_update(event));
@@ -366,108 +498,9 @@ void client::on_stage_instance_update(const dpp::stage_instance_update_t &event)
 void client::on_stage_instance_delete(const dpp::stage_instance_delete_t &event) {
     FOREACH_MODULE(M_on_stage_instance_delete, on_stage_instance_delete(event));
 }
+
 // </CLIENT_EVENT_BIND_IMPL>
 
-bot_module_manager *client::getModuleManager() {
-    return m_module_manager;
-}
 
-void client::log(dpp::loglevel severity, const std::string &msg) const {
-    m_core->log(severity, msg);
-}
 
-database *client::get_db() {
-    return m_database;
 }
-
-std::mutex& client::get_mutex() {
-    return m_mutex;
-}
-
-void client::recvSignal(int signal) {
-    m_core->log(dpp::ll_warning, fmt::format("Received signal {}! Exiting...", signal));
-    exit(signal);
-}
-
-void client::bind_events() {
-    // the following code between the two CLIENT_EVENT_BINDS tags is automatically generated
-    // ! PLEASE DO NOT EDIT !
-    //
-    // <CLIENT_EVENT_BINDS>
-    //
-    // GENERATED AT: 05/31/2022 21:51:59
-    //
-    m_core->on_voice_state_update([this](auto && PH1) { on_voice_state_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_client_disconnect([this](auto && PH1) { on_voice_client_disconnect(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_client_speaking([this](auto && PH1) { on_voice_client_speaking(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_join_request_delete([this](auto && PH1) { on_guild_join_request_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_interaction_create([this](auto && PH1) { on_interaction_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_slashcommand([this](auto && PH1) { on_slashcommand(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_button_click([this](auto && PH1) { on_button_click(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_autocomplete([this](auto && PH1) { on_autocomplete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_select_click([this](auto && PH1) { on_select_click(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_context_menu([this](auto && PH1) { on_message_context_menu(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_user_context_menu([this](auto && PH1) { on_user_context_menu(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_form_submit([this](auto && PH1) { on_form_submit(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_delete([this](auto && PH1) { on_guild_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_channel_delete([this](auto && PH1) { on_channel_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_channel_update([this](auto && PH1) { on_channel_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_ready([this](auto && PH1) { on_ready(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_delete([this](auto && PH1) { on_message_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_member_remove([this](auto && PH1) { on_guild_member_remove(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_resumed([this](auto && PH1) { on_resumed(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_role_create([this](auto && PH1) { on_guild_role_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_typing_start([this](auto && PH1) { on_typing_start(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_reaction_add([this](auto && PH1) { on_message_reaction_add(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_members_chunk([this](auto && PH1) { on_guild_members_chunk(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_reaction_remove([this](auto && PH1) { on_message_reaction_remove(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_create([this](auto && PH1) { on_guild_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_channel_create([this](auto && PH1) { on_channel_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_reaction_remove_emoji([this](auto && PH1) { on_message_reaction_remove_emoji(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_delete_bulk([this](auto && PH1) { on_message_delete_bulk(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_role_update([this](auto && PH1) { on_guild_role_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_role_delete([this](auto && PH1) { on_guild_role_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_channel_pins_update([this](auto && PH1) { on_channel_pins_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_reaction_remove_all([this](auto && PH1) { on_message_reaction_remove_all(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_server_update([this](auto && PH1) { on_voice_server_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_emojis_update([this](auto && PH1) { on_guild_emojis_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_stickers_update([this](auto && PH1) { on_guild_stickers_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_presence_update([this](auto && PH1) { on_presence_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_webhooks_update([this](auto && PH1) { on_webhooks_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_member_add([this](auto && PH1) { on_guild_member_add(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_invite_delete([this](auto && PH1) { on_invite_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_update([this](auto && PH1) { on_guild_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_integrations_update([this](auto && PH1) { on_guild_integrations_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_member_update([this](auto && PH1) { on_guild_member_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_invite_create([this](auto && PH1) { on_invite_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_update([this](auto && PH1) { on_message_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_user_update([this](auto && PH1) { on_user_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_message_create([this](auto && PH1) { on_message_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_ban_add([this](auto && PH1) { on_guild_ban_add(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_ban_remove([this](auto && PH1) { on_guild_ban_remove(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_integration_create([this](auto && PH1) { on_integration_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_integration_update([this](auto && PH1) { on_integration_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_integration_delete([this](auto && PH1) { on_integration_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_create([this](auto && PH1) { on_thread_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_update([this](auto && PH1) { on_thread_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_delete([this](auto && PH1) { on_thread_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_list_sync([this](auto && PH1) { on_thread_list_sync(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_member_update([this](auto && PH1) { on_thread_member_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_thread_members_update([this](auto && PH1) { on_thread_members_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_scheduled_event_create([this](auto && PH1) { on_guild_scheduled_event_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_scheduled_event_update([this](auto && PH1) { on_guild_scheduled_event_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_scheduled_event_delete([this](auto && PH1) { on_guild_scheduled_event_delete(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_scheduled_event_user_add([this](auto && PH1) { on_guild_scheduled_event_user_add(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_guild_scheduled_event_user_remove([this](auto && PH1) { on_guild_scheduled_event_user_remove(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_buffer_send([this](auto && PH1) { on_voice_buffer_send(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_user_talking([this](auto && PH1) { on_voice_user_talking(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_ready([this](auto && PH1) { on_voice_ready(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_receive([this](auto && PH1) { on_voice_receive(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_receive_combined([this](auto && PH1) { on_voice_receive_combined(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_voice_track_marker([this](auto && PH1) { on_voice_track_marker(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_stage_instance_create([this](auto && PH1) { on_stage_instance_create(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_stage_instance_update([this](auto && PH1) { on_stage_instance_update(std::forward<decltype(PH1)>(PH1)); });
-    m_core->on_stage_instance_delete([this](auto && PH1) { on_stage_instance_delete(std::forward<decltype(PH1)>(PH1)); });
-    // </CLIENT_EVENT_BINDS>
-}
-

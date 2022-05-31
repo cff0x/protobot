@@ -7,7 +7,6 @@
 
 #include <string>
 
-
 test_module::test_module(client* bot, bot_module_manager* moduleManager) : bot_module(bot, moduleManager) {
     m_bot->log(dpp::ll_debug, "TestModule created!");
     m_module_manager->attach({M_on_ready }, this);
@@ -48,7 +47,7 @@ bool test_module::on_slashcommand(const dpp::slashcommand_t &cmd) {
             dpp::component().add_component(
                 dpp::component().set_label("P.. push me! >//<").
                     set_type(dpp::cot_button).
-                    set_emoji("", 977304235689508904).
+                    set_emoji("", m_bot->find_emoji_by_name("WolfBlush")->id).
                     set_style(dpp::cos_danger).
                     set_id("awooo")
             )
@@ -61,15 +60,15 @@ bool test_module::on_slashcommand(const dpp::slashcommand_t &cmd) {
 }
 
 bool test_module::on_button_click(const dpp::button_click_t &btn) {
-    m_bot->log(dpp::ll_debug, btn.raw_event);
-    m_bot->log(dpp::ll_debug, btn.command.msg.interaction.name);
-    btn.reply(fmt::format("(Module 1 btn id: {}) Button clicked :3", btn.custom_id));
-    dpp::snowflake channel_id = std::stoull(json::parse(btn.raw_event)["d"]["message"]["channel_id"].get<std::string>());
-    auto emoji =  m_bot->get_core()->guild_emoji_get_sync(m_bot->get_config()->guild_id(), 977279242817658880);
-    std::string test_message = fmt::format("{}{}{}", emoji.get_mention(), emoji.get_mention(), emoji.get_mention());
-    m_bot->log(dpp::ll_debug, test_message);
-    dpp::message msg(channel_id, test_message);
-    m_bot->get_core()->message_create(msg);
+    auto guild_id = m_bot->get_config()->dev_guild_id();
+    auto test_channel = m_bot->find_channel_by_name("testing", guild_id);
+    auto emoji = m_bot->find_emoji_by_name("WolfLewd");
+    dpp::message msg(test_channel->id,
+                     fmt::format("{}{}{}", emoji->get_mention(), emoji->get_mention(), emoji->get_mention()));
+    m_bot->get_core()->message_create_sync(msg.set_flags(dpp::message_flags::m_ephemeral));
+    btn.reply(dpp::message(
+        fmt::format("(Module 1 btn id: {}) Button clicked :3", btn.custom_id)
+    ).set_flags(dpp::message_flags::m_ephemeral));
 }
 
 bool test_module::on_ready(const dpp::ready_t &ready) {
@@ -91,20 +90,22 @@ std::vector<module_command> test_module::get_commands() {
             "Bot management",
             dpp::permissions::p_administrator,
             {
-                dpp::command_option(dpp::co_sub_command, "set_activity", "Set bot activity status").add_option(
-                    dpp::command_option(dpp::co_string, "type", "The activity type", true)
-                        .add_choice(dpp::command_option_choice("Playing", std::string("playing")))
-                        .add_choice(dpp::command_option_choice("Streaming", std::string("streaming")))
-                        .add_choice(dpp::command_option_choice("Listening", std::string("listening")))
-                        .add_choice(dpp::command_option_choice("Watching", std::string("watching")))
-                        .add_choice(dpp::command_option_choice("Competing", std::string("competing")))
+                dpp::command_option(dpp::co_sub_command, "set_activity", "Set bot activity status")
+                    .add_localization("de", "set_activity", "Aktivitätsstatus vom Bot setzen")
+                    .add_option(dpp::command_option(dpp::co_string, "type", "The activity type", true)
+                        .add_localization("de", "type", "Aktivitäts-Typ")
+                        .add_choice(dpp::command_option_choice("Playing", std::string("playing"))
+                                        .add_localization("de", "Spielt"))
+                        .add_choice(dpp::command_option_choice("Streaming", std::string("streaming"))
+                                        .add_localization("de", "Streamt"))
+                        .add_choice(dpp::command_option_choice("Listening", std::string("listening"))
+                                        .add_localization("de", "Hört zu"))
+                        .add_choice(dpp::command_option_choice("Watching", std::string("watching"))
+                                        .add_localization("de", "Schaut zu"))
+                        .add_choice(dpp::command_option_choice("Competing", std::string("competing"))
+                                        .add_localization("de", "Tritt an"))
                     ).add_option(dpp::command_option(dpp::co_string, "message", "The activity message", true))
             }
-        },
-        {
-            "testcmd_mod",
-            "Test command (mod)!",
-            dpp::permissions::p_priority_speaker
         },
         {
             "testcmd_user",

@@ -2,6 +2,8 @@
 
 #include <utility>
 
+namespace protobot {
+
 database::database(std::string host, std::string username, std::string password, std::string dbName) {
     m_config = std::make_shared<postgresql::connection_config>();
     m_config->user = username;
@@ -25,4 +27,4 @@ void database::set_bot_option(const std::string &option, const std::string &valu
 
 database::~database() = default;
 
-
+}

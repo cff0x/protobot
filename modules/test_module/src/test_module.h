@@ -4,6 +4,8 @@
 #include <protobot/client.h>
 #include <protobot/module.h>
 
+using namespace protobot;
+
 class test_module : public bot_module
 {
 public:

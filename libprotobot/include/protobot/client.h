@@ -6,40 +6,60 @@
 
 #include <map>
 
-class bot_module;
+
 #ifdef PROTOBOT_COMMAND_SUPPORT
 class ModuleCommandManager;
 #endif
+
+
+namespace protobot {
+using namespace protobot;
+
+class bot_module;
 class bot_module_manager;
 
 class client {
 public:
-    client(dpp::cluster* core, config* cfg, database* db, bool dev_mode = false);
+    client(dpp::cluster *core, config *cfg, database *db, bool dev_mode = false);
+
     ~client();
 
-    void recvSignal(int signal);
+    bool is_dev_mode();
+    uint64_t get_bot_user_id();
+    database *get_db();
+    config *get_config();
+    dpp::cluster *get_core();
+    std::mutex &get_mutex();
+    bot_module_manager *get_module_manager();
+
+    void log(dpp::loglevel severity, const std::string &msg) const;
+
     void load_modules();
 
-    bool is_dev_mode();
+    dpp::emoji *find_emoji_by_name(const std::string& name, dpp::snowflake guild_id = 0);
+    dpp::role* find_role_by_name(const std::string& name, dpp::snowflake guild_id);
+    dpp::channel* find_channel_by_name(const std::string& name, dpp::snowflake guild_id);
 
     static dpp::activity_type string_to_activity_type(std::string activityType);
 
     void bind_events();
-    std::mutex& get_mutex();
-    uint64_t get_id();
-    database* get_db();
-    dpp::cluster* get_core();
-    config* get_config();
-    void log(dpp::loglevel severity, const std::string &msg) const;
 
-    bot_module_manager* getModuleManager();
+private:
+    bool m_dev_mode;
 
+    dpp::cluster *m_core;
+    config *m_cfg;
+    database *m_database;
+    bot_module_manager *m_module_manager;
+
+    std::mutex m_mutex;
+    
     // the following code between the two CLIENT_EVENT_BIND_DEF tags is automatically generated
     // ! PLEASE DO NOT EDIT !
     //
     // <CLIENT_EVENT_BIND_DEF>
     //
-    // GENERATED AT: 05/31/2022 21:51:59
+    // GENERATED AT: 06/01/2022 01:14:31
     //
     void on_voice_state_update (const dpp::voice_state_update_t &event);
     void on_voice_client_disconnect (const dpp::voice_client_disconnect_t &event);
@@ -113,23 +133,7 @@ public:
     void on_stage_instance_update (const dpp::stage_instance_update_t &event);
     void on_stage_instance_delete (const dpp::stage_instance_delete_t &event);
     // </CLIENT_EVENT_BIND_DEF>
-
-
-
-
-private:
-    bool m_dev_mode;
-
-    dpp::cluster* m_core;
-    config* m_cfg;
-    database* m_database;
-    bot_module_manager* m_module_manager;
-
-    std::mutex m_mutex;
-
-#ifdef PROTOBOT_COMMAND_SUPPORT
-    ModuleCommandManager* m_moduleCommandManager;
-#endif
 };
+}
 
 #endif //PROTOBOT_CLIENT_H

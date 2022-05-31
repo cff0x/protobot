@@ -4,52 +4,51 @@
 #include <sstream>
 #include <algorithm>
 #include <exception>
-#include <signal.h>
-
 #include <CLI/CLI.hpp>
-//#include <getopt.h>
+
+using namespace protobot;
 
 int main(int argc, char const *argv[])
 {
+    // application parameters
+    std::string config_file{"config/config.json"};
+    std::string log_file{"logs/protobot.log"};
+    std::string modules_path{"modules"};
+    bool dev_mode{false};
+
+    // add command line options
     CLI::App app("ProtoBot Discord Bot");
     app.set_version_flag("--version", "0.420.69");
-
-    // application parameters
-    std::string configFile{"config/config.json"};
-    std::string logFile{"logs/protobot.log"};
-    std::string modulesPath{"modules"};
-    bool devMode{false};
-
-    app.add_option("-m,--modules-path,modules-path", modulesPath, "Folder containing the bot modules");
-    app.add_option("-c,--config,config", configFile, "JSON config file");
-    app.add_option("-l,--logfile,logfile", logFile, "Log output file");
-    app.add_option("-d,--dev,dev", devMode, "Developer mode");
-
+    app.add_option("-m,--modules-path,modules-path", modules_path, "Folder containing the bot modules");
+    app.add_option("-c,--config,config", config_file, "JSON config file");
+    app.add_option("-l,--logfile,logfile", log_file, "Log output file");
+    app.add_option("-d,--dev,dev", dev_mode, "Developer mode");
     CLI11_PARSE(app, argc, argv);
 
     // read config file
-    config config{configFile};
-    config.set_modules_path(modulesPath);
+    config cfg{config_file};
+    cfg.set_modules_path(modules_path);
 
     // setup bot client
     uint32_t intents = dpp::i_default_intents;
     intents |= dpp::i_message_content;
-    dpp::cluster bot(config.token(), intents);
+    dpp::cluster core(cfg.token(), intents);
 
     // create database connection
-    database database{config.database_host(),
-                      config.database_username(),
-                      config.database_password(),
-                      config.database_db_name()};
+    database db{cfg.database_host(),
+                cfg.database_username(),
+                cfg.database_password(),
+                cfg.database_db_name()};
 
-    client client(&bot, &config, &database, devMode);
+    // create bot client
+    client bot(&core, &cfg, &db, dev_mode);
 
-    // Set up spdlog logger
+    // setup spdlog logger
     std::shared_ptr<spdlog::logger> log;
     spdlog::init_thread_pool(8192, 2);
     std::vector<spdlog::sink_ptr> sinks;
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt >();
-    auto rotating = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(logFile, 1024 * 1024 * 5, 10);
+    auto rotating = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(log_file, 1024 * 1024 * 5, 10);
     sinks.push_back(stdout_sink);
     sinks.push_back(rotating);
     log = std::make_shared<spdlog::async_logger>("test", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
@@ -57,8 +56,8 @@ int main(int argc, char const *argv[])
     log->set_pattern("%^%Y-%m-%d %H:%M:%S.%e [%L] [th#%t]%$ : %v");
     log->set_level(spdlog::level::level_enum::debug);
 
-    // Integrate spdlog logger to D++ log events
-    bot.on_log([&bot, &log](const dpp::log_t & event) {
+    // integrate spdlog logger to D++ log events
+    core.on_log([&log](const dpp::log_t & event) {
         switch (event.severity) {
             case dpp::ll_trace:
                 log->trace("{}", event.message);
@@ -82,25 +81,21 @@ int main(int argc, char const *argv[])
         }
     });
 
-    if(devMode) {
-        client.log(dpp::ll_info, "=== RUNNING IN DEVELOPER MODE ===");
+    if(dev_mode) {
+        bot.log(dpp::ll_info, "=== RUNNING IN DEVELOPER MODE ===");
     }
 
-    // load modules
-    client.load_modules();
-
-    // bind events
-    client.bind_events();
+    // load client
+    bot.load_modules();
+    bot.bind_events();
 
     try {
         // connect and start the event loop
-        bot.start(false);
+        core.start(false);
     }
-    catch (std::exception e) {
-        bot.log(dpp::ll_error, fmt::format("Oof! {}", e.what()));
+    catch (std::exception &e) {
+        core.log(dpp::ll_error, fmt::format("Oh no! {} :<", e.what()));
     }
-
-    std::cout << "LOL" << std::endl;
 
     return 0;
 }
