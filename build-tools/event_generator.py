@@ -1,9 +1,11 @@
 import sys
 import re
+from datetime import datetime
 
 event_pattern = re.compile(r"\tevent_router_t<(\w+)>\s(\w+);")
 
 if __name__ == "__main__":
+    TIMESTAMP = datetime.now().strftime("%m/%d/%Y %H:%M:%S")
     DISCORDPP_CLUSTER_H_PATH = sys.argv[1]
     print(f"cluster.h: {DISCORDPP_CLUSTER_H_PATH}")
     DISCORDPP_CLUSTER_H_CONTENT = ""
@@ -27,7 +29,9 @@ if __name__ == "__main__":
         bot_module_event = f"M_{event_name}"
         bot_module_event_enum_entries.insert(len(bot_module_event_enum_entries) - 1, bot_module_event)
 
-        core_binds.append(f"m_core->{event_name}(std::bind(&client::{event_name}, this, std::placeholders::_1));")
+        core_binds.append(
+            f"m_core->{event_name}([this](auto && PH1) {{ {event_name}(std::forward<decltype(PH1)>(PH1)); }});"
+        )
         core_bind_defs.append(f"void {event_name} (const dpp::{event_type_name} &event);")
 
         core_bind_impl_str = f"void client::{event_name}(const dpp::{event_type_name} &event)" + " {\n"
@@ -77,6 +81,9 @@ if __name__ == "__main__":
 
     event_header_content = "// THIS CODE IS AUTOMATICALLY GENERATED FROM THE DPP LIBRARY CODE\n" \
                            "// PLEASE DO NOT EDIT\n" \
+                           "//\n" \
+                           f"// GENERATED AT: {TIMESTAMP}\n" \
+                           "//\n" \
                            f"{events_header_content}"
 
     with open("libprotobot/include/protobot/events.h", "w") as f:
@@ -92,7 +99,9 @@ if __name__ == "__main__":
     for entry in client_event_binds_pattern.finditer(CLIENT_CPP_CONTENT):
         replace_start = entry.span(1)[0]
         replace_end = entry.span(1)[1]
-        NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[:replace_start] + "    "
+        NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[:replace_start] + "    //\n" + \
+                                                                       f"    // GENERATED AT: {TIMESTAMP}\n" + \
+                                                                       "    //\n" + "    "
         NEW_CLIENT_CPP_CONTENT += "\n    ".join(core_binds)
         NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[replace_end:]
 
@@ -103,7 +112,9 @@ if __name__ == "__main__":
     for entry in client_event_bind_impl_pattern.finditer(CLIENT_CPP_CONTENT):
         replace_start = entry.span(1)[0]
         replace_end = entry.span(1)[1]
-        NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[:replace_start]
+        NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[:replace_start] + "//\n" + \
+                                                                       f"// GENERATED AT: {TIMESTAMP}\n" + \
+                                                                       "//\n"
         NEW_CLIENT_CPP_CONTENT += "\n\n".join(core_bind_impl)
         NEW_CLIENT_CPP_CONTENT += CLIENT_CPP_CONTENT[replace_end:]
 
@@ -123,7 +134,9 @@ if __name__ == "__main__":
     for entry in client_event_bind_def_pattern.finditer(CLIENT_H_CONTENT):
         replace_start = entry.span(1)[0]
         replace_end = entry.span(1)[1]
-        NEW_CLIENT_H_CONTENT += CLIENT_H_CONTENT[:replace_start] + "    "
+        NEW_CLIENT_H_CONTENT += CLIENT_H_CONTENT[:replace_start] + "    //\n" + \
+                                                                   f"    // GENERATED AT: {TIMESTAMP}\n" + \
+                                                                   "    //\n" + "    "
         NEW_CLIENT_H_CONTENT += "\n    ".join(core_bind_defs)
         NEW_CLIENT_H_CONTENT += CLIENT_H_CONTENT[replace_end:]
 
@@ -142,7 +155,9 @@ if __name__ == "__main__":
     for entry in client_event_bind_def_pattern.finditer(MODULE_H_CONTENT):
         replace_start = entry.span(1)[0]
         replace_end = entry.span(1)[1]
-        NEW_MODULE_H_CONTENT += MODULE_H_CONTENT[:replace_start] + "    "
+        NEW_MODULE_H_CONTENT += MODULE_H_CONTENT[:replace_start] + "    //\n" + \
+                                                                   f"    // GENERATED AT: {TIMESTAMP}\n" + \
+                                                                   "    //\n" + "    "
         NEW_MODULE_H_CONTENT += "\n    ".join(bot_module_event_defs)
         NEW_MODULE_H_CONTENT += MODULE_H_CONTENT[replace_end:]
 
@@ -161,7 +176,9 @@ if __name__ == "__main__":
     for entry in client_event_bind_def_pattern.finditer(MODULE_CPP_CONTENT):
         replace_start = entry.span(1)[0]
         replace_end = entry.span(1)[1]
-        NEW_MODULE_CPP_CONTENT += MODULE_CPP_CONTENT[:replace_start]
+        NEW_MODULE_CPP_CONTENT += MODULE_CPP_CONTENT[:replace_start] + "//\n" + \
+                                                                       f"// GENERATED AT: {TIMESTAMP}\n" + \
+                                                                       "//\n"
         NEW_MODULE_CPP_CONTENT += "\n\n".join(bot_module_event_impl)
         NEW_MODULE_CPP_CONTENT += MODULE_CPP_CONTENT[replace_end:]
 

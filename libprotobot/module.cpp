@@ -326,6 +326,9 @@ void Module::onBulkCommandCreated(const std::map<std::string, ModuleCommand>& co
 // ! PLEASE DO NOT EDIT !
 //
 // <BOT_MODULE_EVENT_IMPL>
+//
+// GENERATED AT: 05/31/2022 21:51:59
+//
 bool bot_module::on_voice_state_update(const dpp::voice_state_update_t &event) {
     return true;
 }

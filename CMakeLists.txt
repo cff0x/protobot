@@ -105,6 +105,10 @@ find_package(DPP REQUIRED)
 include_directories(${DPP_INCLUDE_DIR})
 link_directories(${DPP_LIBRARY_DIR})
 
+add_custom_target(generate_events
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/build-tools/event_generator.py ${DPP_INCLUDE_DIR}/cluster.h
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
 
 ######## ProtoBot
 #### set main source and include directories
@@ -166,7 +170,4 @@ target_link_libraries(
 #### add ProtoBot modules
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
-add_custom_target(generate_events
-        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/build-tools/event_generator.py ${DPP_INCLUDE_DIR}/cluster.h
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+

@@ -1,5 +1,8 @@
 // THIS CODE IS AUTOMATICALLY GENERATED FROM THE DPP LIBRARY CODE
 // PLEASE DO NOT EDIT
+//
+// GENERATED AT: 05/31/2022 21:51:59
+//
 enum bot_module_event {
     M_BEGIN,
     M_on_voice_state_update,

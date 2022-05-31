@@ -38,6 +38,9 @@ public:
     // ! PLEASE DO NOT EDIT !
     //
     // <CLIENT_EVENT_BIND_DEF>
+    //
+    // GENERATED AT: 05/31/2022 21:51:59
+    //
     void on_voice_state_update (const dpp::voice_state_update_t &event);
     void on_voice_client_disconnect (const dpp::voice_client_disconnect_t &event);
     void on_voice_client_speaking (const dpp::voice_client_speaking_t &event);
@@ -111,40 +114,7 @@ public:
     void on_stage_instance_delete (const dpp::stage_instance_delete_t &event);
     // </CLIENT_EVENT_BIND_DEF>
 
-    void onReady (const dpp::ready_t &obj);
-    void onChannelCreate(const dpp::channel_create_t &obj);
-    void onChannelDelete(const dpp::channel_delete_t &obj);
-    void onGuildCreate(const dpp::guild_create_t &obj);
-    void onGuildDelete(const dpp::guild_delete_t &obj);
-    void onGuildMemberAdd(const dpp::guild_member_add_t &obj);
-    void onTypingStart (const dpp::typing_start_t &obj);
-    void onMessageCreate (const dpp::message_create_t &obj);
-    void onMessageUpdate (const dpp::message_update_t &obj);
-    void onMessageDelete (const dpp::message_delete_t &obj);
-    void onMessageDeleteBulk (const dpp::message_delete_bulk_t &obj);
-    void onGuildUpdate (const dpp::guild_update_t &obj);
-    void onMessageReactionAdd (const dpp::message_reaction_add_t &obj);
-    void onMessageReactionRemove (const dpp::message_reaction_remove_t &obj);
-    void onMessageReactionRemoveAll (const dpp::message_reaction_remove_all_t &obj);
-    void onUserUpdate (const dpp::user_update_t &obj);
-    void onResumed (const dpp::resumed_t &obj);
-    void onChannelUpdate (const dpp::channel_update_t &obj);
-    void onChannelPinsUpdate (const dpp::channel_pins_update_t &obj);
-    void onGuildBanAdd (const dpp::guild_ban_add_t &obj);
-    void onGuildBanRemove (const dpp::guild_ban_remove_t &obj);
-    void onGuildEmojisUpdate (const dpp::guild_emojis_update_t &obj);
-    void onGuildIntegrationsUpdate (const dpp::guild_integrations_update_t &obj);
-    void onGuildMemberRemove (const dpp::guild_member_remove_t &obj);
-    void onGuildMemberUpdate (const dpp::guild_member_update_t &obj);
-    void onGuildMembersChunk (const dpp::guild_members_chunk_t &obj);
-    void onGuildRoleCreate (const dpp::guild_role_create_t &obj);
-    void onGuildRoleUpdate (const dpp::guild_role_update_t &obj);
-    void onGuildRoleDelete (const dpp::guild_role_delete_t &obj);
-    void onPresenceUpdate (const dpp::presence_update_t &obj);
-    void onVoiceStateUpdate (const dpp::voice_state_update_t &obj);
-    void onVoiceServerUpdate (const dpp::voice_server_update_t &obj);
-    void onWebhooksUpdate (const dpp::webhooks_update_t &obj);
-    void onSlashCommand(const dpp::slashcommand_t &obj);
+
 
 
 private:

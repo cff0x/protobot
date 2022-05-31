@@ -165,6 +165,9 @@ public:
     // ! PLEASE DO NOT EDIT !
     //
     // <BOT_MODULE_EVENT_DEF>
+    //
+    // GENERATED AT: 05/31/2022 21:51:59
+    //
     virtual bool on_voice_state_update(const dpp::voice_state_update_t &event);
     virtual bool on_voice_client_disconnect(const dpp::voice_client_disconnect_t &event);
     virtual bool on_voice_client_speaking(const dpp::voice_client_speaking_t &event);

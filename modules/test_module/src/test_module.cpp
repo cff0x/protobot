@@ -45,13 +45,13 @@ bool test_module::on_slashcommand(const dpp::slashcommand_t &cmd) {
     } else if(cmd.command.get_command_name() == "testcmd_user") {
         m_bot->log(dpp::ll_debug, cmd.raw_event);
         cmd.edit_original_response(dpp::message(cmd.command.msg.channel_id, "Hewwoo").add_component(
-                dpp::component().add_component(
-                        dpp::component().set_label("P.. push me! >//<").
-                                set_type(dpp::cot_button).
-                                set_emoji("", 977304235689508904).
-                                set_style(dpp::cos_danger).
-                                set_id("awooo")
-                )
+            dpp::component().add_component(
+                dpp::component().set_label("P.. push me! >//<").
+                    set_type(dpp::cot_button).
+                    set_emoji("", 977304235689508904).
+                    set_style(dpp::cos_danger).
+                    set_id("awooo")
+            )
         ));
     } else {
         cmd.edit_original_response(dpp::message(fmt::format("(Module 1) Command {} has not been implemented yet!", cmd.command.get_command_name())).set_flags(dpp::message_flags::m_ephemeral));
