@@ -62,7 +62,7 @@ bool test_module::on_slashcommand(const dpp::slashcommand_t &cmd) {
 bool test_module::on_button_click(const dpp::button_click_t &btn) {
     auto guild_id = m_bot->get_config()->dev_guild_id();
     auto test_channel = m_bot->find_channel_by_name("testing", guild_id);
-    auto emoji = m_bot->find_emoji_by_name("WolfLewd");
+    auto emoji = m_bot->find_emoji_by_name("WolfYawn");
     dpp::message msg(test_channel->id,
                      fmt::format("{}{}{}", emoji->get_mention(), emoji->get_mention(), emoji->get_mention()));
     m_bot->get_core()->message_create_sync(msg.set_flags(dpp::message_flags::m_ephemeral));

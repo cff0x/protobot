@@ -70,13 +70,13 @@ bool bot_module_manager::load(const std::string &file_name) {
         m_bot->log(dpp::ll_debug, fmt::format("Bot module file path: {}", full_module_path.string()));
 
 #ifdef _WIN32
-        m.dlopenHandle = LoadLibraryW(fullModulePath.c_str());
+        m.library_handle = LoadLibraryW(full_module_path.c_str());
 #else
         m.library_handle = dlopen(full_module_path.c_str(), RTLD_NOW | RTLD_LOCAL);
 #endif
         if (!m.library_handle) {
 #ifdef _WIN32
-            m_lastError = GetLastError();
+            m_last_error = GetLastError();
 #else
             m_last_error = dlerror();
 #endif
@@ -87,7 +87,7 @@ bool bot_module_manager::load(const std::string &file_name) {
                 m_bot->log(dpp::ll_error, fmt::format("Can't load module: {}", m.error ? m.error : "General error"));
                 m_last_error = (m.error ? m.error : "General error");
 #ifdef _WIN32
-                FreeLibrary((HMODULE)m.dlopenHandle);
+                FreeLibrary((HMODULE)m.library_handle);
 #else
                 dlclose(m.library_handle);
 #endif
@@ -101,7 +101,7 @@ bool bot_module_manager::load(const std::string &file_name) {
                     m.error = "Not a module (symbol init_module not found)";
                     m_last_error = m.error;
 #ifdef _WIN32
-                    FreeLibrary((HMODULE)m.dlopenHandle);
+                    FreeLibrary((HMODULE)m.library_handle);
 #else
                     dlclose(m.library_handle);
 #endif
@@ -197,7 +197,7 @@ bool bot_module_manager::unload(const std::string &file_name) {
     if (mod.library_handle) {
 
 #ifdef _WIN32
-        FreeLibrary((HMODULE)mod.dlopenHandle);
+        FreeLibrary((HMODULE)mod.library_handle);
 #else
         dlclose(mod.library_handle);
 #endif
@@ -223,7 +223,7 @@ bool bot_module_manager::get_symbol(module_native &native, const char *symbol_na
     // Find exported symbol in shared object
     if (native.library_handle) {
 #ifdef _WIN32
-        native.entryPoint = (ModuleEntryPoint*)GetProcAddress((HMODULE)native.dlopenHandle, symbolName);
+        native.entry_point = (module_entry_point*)GetProcAddress((HMODULE)native.library_handle, symbol_name);
 #else
         dlerror(); // clear value
         native.entry_point = (module_entry_point *) dlsym(native.library_handle, symbol_name);

@@ -5,11 +5,32 @@
 #include <algorithm>
 #include <exception>
 #include <CLI/CLI.hpp>
+#include <rang.hpp>
+
+
+#include <csignal>
+void signal_handler(int s) {
+    std::cout << std::endl << rang::style::reset << rang::fg::red << rang::style::bold;
+    std::cout << "Control-C detected, exiting..." << rang::style::reset << std::endl;
+    std::exit(1);
+}
+
+
+
+
+
 
 using namespace protobot;
 
 int main(int argc, char const *argv[])
 {
+    // nice ctrl+c handling
+    struct sigaction sigIntHandler{};
+    sigIntHandler.sa_handler = signal_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+
     // application parameters
     std::string config_file{"config/config.json"};
     std::string log_file{"logs/protobot.log"};
@@ -24,6 +45,7 @@ int main(int argc, char const *argv[])
     app.add_option("-l,--logfile,logfile", log_file, "Log output file");
     app.add_option("-d,--dev,dev", dev_mode, "Developer mode");
     CLI11_PARSE(app, argc, argv);
+
 
     // read config file
     config cfg{config_file};
@@ -88,6 +110,10 @@ int main(int argc, char const *argv[])
     // load client
     bot.load_modules();
     bot.bind_events();
+
+#ifdef ANGELSCRIPT_INTEGRATION
+    bot.load_as_engine();
+#endif
 
     try {
         // connect and start the event loop

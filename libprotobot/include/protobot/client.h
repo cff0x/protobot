@@ -4,6 +4,11 @@
 #include <protobot/config.h>
 #include <protobot/database.h>
 
+#ifdef ANGELSCRIPT_INTEGRATION
+#include <angelscript.h>
+#include <protobot/angelscript/scriptstdstring.h>
+#endif
+
 #include <map>
 
 
@@ -33,6 +38,11 @@ public:
     bot_module_manager *get_module_manager();
 
     void log(dpp::loglevel severity, const std::string &msg) const;
+
+#ifdef ANGELSCRIPT_INTEGRATION
+    void message_callback(const asSMessageInfo *msg, void *param);
+    bool load_as_engine();
+#endif
 
     void load_modules();
 

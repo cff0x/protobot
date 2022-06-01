@@ -2,6 +2,7 @@
 #include <protobot/module.h>
 #include <protobot/string_utils.h>
 
+
 namespace protobot {
 
 client::client(dpp::cluster *core, config *cfg, database *db, bool dev_mode) :
@@ -48,6 +49,74 @@ bot_module_manager *client::get_module_manager() {
 void client::log(dpp::loglevel severity, const std::string &msg) const {
     m_core->log(severity, msg);
 }
+
+#ifdef ANGELSCRIPT_INTEGRATION
+void client::message_callback(const asSMessageInfo* msg, void* param)
+{
+    dpp::loglevel type = dpp::ll_error;
+    if(msg->type == asMSGTYPE_WARNING) {
+        type = dpp::ll_warning;
+    } else if(msg->type == asMSGTYPE_INFORMATION) {
+        type = dpp::ll_info;
+    }
+
+    log(dpp::ll_info,
+        fmt::format("[AngelScript]: {} ({}, {}) : {} : {}", msg->section, msg->row, msg->col, type, msg->message));
+}
+
+void print(std::string &msg)
+{
+    std::cout << fmt::format("[AngelScript]: {}", msg) << std::endl;
+}
+
+bool client::load_as_engine() {
+    // create angelscript engine
+    asIScriptEngine *engine = asCreateScriptEngine();
+    RegisterStdString(engine);
+    engine->SetMessageCallback(asMETHOD(client, message_callback), this, asCALL_THISCALL);
+
+    // create script module
+    asIScriptModule *mod = engine->GetModule("module", asGM_ALWAYS_CREATE);
+    engine->RegisterGlobalFunction("void print(const string &in)", asFUNCTION(print), asCALL_CDECL);
+
+    // load script content from file
+    std::stringstream script;
+    std::ifstream script_file("../script.as");
+    script << script_file.rdbuf();
+    log(dpp::ll_debug, fmt::format("Loading AngelScript script: {} ", script.str()));
+    mod->AddScriptSection("script.as", script.str().c_str());
+
+    // build script module
+    int result = mod->Build();
+    if(result < 0)
+    {
+        log(dpp::ll_error, fmt::format("Error while building script module - result code: {}", result));
+        return false;
+    }
+
+    // find and call the main() function from the loaded script file
+    asIScriptFunction *func = mod->GetFunctionByDecl("void main()");
+    if(func == nullptr)
+    {
+        log(dpp::ll_error, "Function void main() has not been found in the script");
+        return false;
+    }
+
+    asIScriptContext *ctx = engine->CreateContext();
+    ctx->Prepare(func);
+    result = ctx->Execute();
+    if(result != asEXECUTION_FINISHED)
+    {
+        if(result == asEXECUTION_EXCEPTION)
+        {
+            log(dpp::ll_error, fmt::format("An exception occured while ececuting script: {}", ctx->GetExceptionString()));
+            return false;
+        }
+    }
+
+    return true;
+}
+#endif
 
 void client::load_modules() {
     size_t moduleCount = m_cfg->data()["modules"].size();

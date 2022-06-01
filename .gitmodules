@@ -1,3 +1,18 @@
-[submodule "thirdparty/CLI11"]
-	path = thirdparty/CLI11
+[submodule "external/CLI11"]
+	path = external/CLI11
 	url = https://github.com/CLIUtils/CLI11.git
+[submodule "external/pybind11"]
+	path = external/pybind11
+	url = https://github.com/pybind/pybind11.git
+[submodule "external/spdlog"]
+	path = external/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "external/libpqxx"]
+	path = external/libpqxx
+	url = https://github.com/jtv/libpqxx.git
+[submodule "external/angelscript"]
+	path = external/angelscript
+	url = https://github.com/codecat/angelscript-mirror.git
+[submodule "external/rang"]
+	path = external/rang
+	url = https://github.com/agauniyal/rang.git

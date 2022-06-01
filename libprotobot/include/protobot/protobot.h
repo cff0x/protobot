@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#define ANGELSCRIPT_INTEGRATION
+
 using json = nlohmann::json;
 
 #endif //PROTOBOT_PROTOBOT_H
