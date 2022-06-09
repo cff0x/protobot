@@ -1,5 +1,7 @@
 # ProtoBot - modular and extensible Discord bot
 
+![logo](https://cdn.discordapp.com/app-icons/981691832998166548/50e5fd7081e5692cd4cefcd5040a2cdd.png?size=256)
+
 **This bot is WIP!**
 
 It works, kind of. But it may eat your cat, destroy the universe or do other unexpected things. Do not expect anything
