@@ -1,6 +1,6 @@
 # ProtoBot - modular and extensible Discord bot
 
-![logo](https://cdn.discordapp.com/app-icons/981691832998166548/50e5fd7081e5692cd4cefcd5040a2cdd.png?size=256)
+<img align="right" width="256" height="256" src="https://cdn.discordapp.com/app-icons/981691832998166548/50e5fd7081e5692cd4cefcd5040a2cdd.png?size=256">
 
 **This bot is WIP!**
 
