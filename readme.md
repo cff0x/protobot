@@ -14,19 +14,18 @@ The bot will be kept open-source but I will not publish all my modules.
 
 **Do not reach out to me for support, yet. When the time comes, I will let you know here.**
 
-### Requirements
+## Requirements
+Most of the required libraries are all included as submodules inside the `external/` folder.
+
+### Additional requirements
+Additionally, you need the following:
 - CMake
-- [D++ Discord Library](https://github.com/brainboxdotcc/DPP)
-- [spdlog](https://github.com/gabime/spdlog)
-- [sqlpp11](https://github.com/rbock/sqlpp11)
-- [CLI11](https://github.com/CLIUtils/CLI11) (included in /thirdparty/CLI11)
+- PostgreSQL and pqxx libraries
+- libsodium and libopus (if you want voice support)
 - A PostgreSQL database (other backends can (and will) be added)
 - Python (for event-related code generation - see `generate_events` custom CMake target)
 
-This bot currently only works on Unix-based systems. Windows support is planned.  More info on how to build, use and developing modules will follow.
-
-Disclaimer: *Some of the code may look shitty or be shitty, so keep in mind: **this is just a WIP**. Have fun!*
-
+## Build and packaging
 For a simple build, just use CMake (provided you have all requirements met):
 ```
 cmake -B ./build
@@ -34,3 +33,7 @@ cmake --build build
 ```
 
 This will build the `libprotobot` shared library, the bot application and all modules inside `/modules/`.
+
+This bot currently only works on Unix-based systems. Windows support is planned.  More info on how to build, use and developing modules will follow.
+
+Disclaimer: *Some of the code may look shitty or be shitty, so keep in mind: **this is just a WIP**. Have fun!*
