@@ -34,3 +34,5 @@ cmake --build build
 ```
 
 This will build the `libprotobot` shared library, the bot application and all modules inside `/modules/`.
+
+To create an archive containing all binaries, just execute `cpack` inside the `build/` folder. All modules and a sample config file will be copied to the `bin` folder inside of the package. The bot can be run by executing `run.sh`.
