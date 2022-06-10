@@ -39,5 +39,5 @@ add_subdirectory(spdlog)
 
 # build D++ Discord library
 #SET(THREADS_PREFER_PTHREAD_FLAG OFF CACHE BOOL "")
-#add_subdirectory(DPP)
+add_subdirectory(DPP)
 #message("sodium_INCLUDE_DIR: ${sodium_INCLUDE_DIR}")

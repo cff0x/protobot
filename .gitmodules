@@ -16,3 +16,6 @@
 [submodule "external/rang"]
 	path = external/rang
 	url = https://github.com/agauniyal/rang.git
+[submodule "external/DPP"]
+	path = external/DPP
+	url = https://github.com/brainboxdotcc/DPP.git

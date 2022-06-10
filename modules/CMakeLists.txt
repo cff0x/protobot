@@ -27,6 +27,11 @@ foreach (FULL_MODULE_NAME ${MODULE_DIR_LIST})
     set_target_properties(${MODULE_NAME} PROPERTIES PREFIX "")
     set_target_properties(${MODULE_NAME} PROPERTIES SUFFIX "")
 
+    install(TARGETS ${MODULE_NAME}
+            RUNTIME DESTINATION bin/modules
+            LIBRARY DESTINATION bin/modules
+            ARCHIVE DESTINATION bin/modules)
+
   endif()
 
 endforeach(FULL_MODULE_NAME)

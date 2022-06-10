@@ -36,10 +36,10 @@ find_package(Threads REQUIRED)
 
 add_subdirectory(external)
 
-find_package(DPP REQUIRED)
+#find_package(DPP REQUIRED)
 
 # add directories to project
-include_directories(${DPP_INCLUDE_DIR})
+#include_directories(${DPP_INCLUDE_DIR})
 #link_directories(${DPP_LIBRARY_DIR})
 
 add_custom_target(generate_events
@@ -75,7 +75,7 @@ target_link_libraries(
     ${OPENSSL_CRYPTO_LIBRARY}
     ${OPENSSL_SSL_LIBRARY}
     ${ANGELSCRIPT_LIBRARY_NAME}
-    ${DPP_LIBRARY}
+    dpp
     spdlog
     pq
     pqxx
@@ -114,3 +114,20 @@ target_link_libraries(
 #### add ProtoBot modules
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/modules)
 
+
+#### CPack package
+install(TARGETS ${PROJECT_EXECUTABLE_NAME} ${PROJECT_LIBRARY_NAME} spdlog
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
+install(DIRECTORY libprotobot/include/ DESTINATION include/libprotobot)
+install(DIRECTORY data/config DESTINATION bin)
+install(FILES data/run.sh DESTINATION bin)
+
+set(CPACK_PACKAGE_DESCRIPTION "ProtoBot")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "420")
+set(CPACK_PACKAGE_VERSION_PATCH "69")
+set(CPACK_PACKAGE_VENDOR "cff0x")
+set(CPACK_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-dev")
+include (CPack)
